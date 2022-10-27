@@ -138,7 +138,6 @@
       sceneInfo[3].objs.images.push(imgElem3);
     }
   }
-  setCanvasImages();
 
   function stickyMenu() {
     if (yOffset > 44) {
@@ -520,21 +519,33 @@
     }
   }
 
-  window.addEventListener("resize", setLayout);
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 900) {
+      setLayout();
+    }
+
+    sceneInfo[3].values.rectStartY = 0;
+  });
+  //모바일 기기 가로,세로 변경 이벤트
+  window.addEventListener("orientationchange", setLayout);
+
   window.addEventListener("load", () => {
+    document.body.classList.remove("before-loading");
     setLayout();
     sceneInfo[0].objs.context.drawImage(sceneInfo[0].objs.videoImages[0], 0, 0);
   });
+
   window.addEventListener("scroll", () => {
     yOffset = window.scrollY;
     scrollLoop();
     stickyMenu();
-
     if (!rafState) {
       rafId = requestAnimationFrame(loop);
       rafState = true;
     }
   });
-
-  setLayout();
+  document.querySelector(".loading").addEventListener("transitionend", (e) => {
+    document.body.removeChild(e.currentTarget);
+  });
+  setCanvasImages();
 })();
