@@ -13,6 +13,7 @@
       type: "sticky",
       heightNum: 5, //브라우저 높이의 5배로 scrollHeight를 세팅
       scrollHeight: 0,
+      finishedLoadingImages: false,
       objs: {
         container: document.querySelector("#scroll-section-0"),
         messageA: document.querySelector("#scroll-section-0 .main-message.a"),
@@ -56,6 +57,7 @@
       type: "sticky",
       heightNum: 5, //브라우저 높이의 5배로 scrollHeight를 세팅
       scrollHeight: 0,
+      finishedLoadingImages: false,
       objs: {
         container: document.querySelector("#scroll-section-2"),
         messageA: document.querySelector("#scroll-section-2 .a"),
@@ -116,28 +118,174 @@
     },
   ];
 
-  function setCanvasImages() {
-    let imgElem;
-    for (let i = 0; i < sceneInfo[0].values.videoImageCount; i++) {
-      imgElem = new Image();
-      imgElem.src = `./video/001/IMG_${6726 + i}.JPG`;
-      sceneInfo[0].objs.videoImages.push(imgElem);
-    }
+  let totalImages = 0;
+  const scene0Images = [];
+  const scene2Images = [];
 
-    let imgElem2;
-    for (let i = 0; i < sceneInfo[2].values.videoImageCount; i++) {
-      imgElem2 = new Image();
-      imgElem2.src = `./video/002/IMG_${7027 + i}.JPG`;
-      sceneInfo[2].objs.videoImages.push(imgElem2);
-    }
+  function getImageNumber(str) {
+    const newStr = str.substring(str.lastIndexOf("_") + 1, str.lastIndexOf("."));
+    return newStr * 1;
+  }
 
-    let imgElem3;
-    for (let i = 0; i < sceneInfo[3].objs.imagesPath.length; i++) {
-      imgElem3 = new Image();
-      imgElem3.src = sceneInfo[3].objs.imagesPath[i];
-      sceneInfo[3].objs.images.push(imgElem3);
+  function sortImages(imageArray) {
+    let temp;
+    let imageNum1;
+    let imageNum2;
+    for (let i = 0; i < imageArray.length; i++) {
+      for (let j = 0; j < imageArray.length - i; j++) {
+        if (j < imageArray.length - 1) {
+          imageNum1 = getImageNumber(imageArray[j].currentSrc);
+          imageNum2 = getImageNumber(imageArray[j + 1].currentSrc);
+          if (imageNum1 > imageNum2) {
+            temp = imageArray[j];
+            imageArray[j] = imageArray[j + 1];
+            imageArray[j + 1] = temp;
+          }
+        }
+      }
     }
   }
+
+  function initAfterLoadImages() {
+    if (currentScene !== 2 && sceneInfo[0].objs.videoImages[0]) {
+      sceneInfo[0].objs.context.drawImage(sceneInfo[0].objs.videoImages[0], 0, 0);
+    }
+
+    let tempScrollY = yOffset;
+    let tempScrollCount = 1;
+
+    if (yOffset > 0) {
+      let siId = setInterval(() => {
+        window.scrollTo(0, tempScrollY);
+        tempScrollCount++;
+        tempScrollY++;
+        if (tempScrollCount > 10) {
+          clearInterval(siId);
+        }
+      }, 20);
+    }
+  }
+
+  // function loadImagesOfScene0() {
+  //   if (sceneInfo[0].finishedLoadingImages) return;
+
+  //   let numberOfLoadedImages = 0;
+  //   for (let i = 0; i < sceneInfo[0].values.videoImageCount; i++) {
+  //     let imgElem = new Image();
+  //     imgElem.src = `./video/001/IMG_${6726 + i}.JPG`;
+  //     imgElem.addEventListener("load", () => {
+  //       scene0Images.push(imgElem);
+  //       numberOfLoadedImages++;
+  //       totalImages++;
+
+  //       if (numberOfLoadedImages === sceneInfo[0].values.videoImageCount) {
+  //         //모두 로드 되었으면
+  //         sceneInfo[0].finishedLoadingImages = true;
+  //         setImagesOfScene(0);
+  //         initAfterLoadImages();
+
+  //         if (!sceneInfo[2].finishedLoadingImages) {
+  //           loadImagesOfScene2();
+  //         }
+  //       }
+  //     });
+  //   }
+  // }
+
+  function loadImagesOfScene(num) {
+    if (sceneInfo[num].finishedLoadingImages) return;
+
+    let numberOfLoadedImages = 0;
+    let images;
+    if (num === 0) {
+      images = scene0Images;
+    } else {
+      images = scene2Images;
+    }
+    for (let i = 0; i < sceneInfo[num].values.videoImageCount; i++) {
+      let imgElem = new Image();
+      if (num === 0) {
+        imgElem.src = `./video/001/IMG_${6726 + i}.JPG`;
+      } else {
+        imgElem.src = `./video/002/IMG_${7027 + i}.JPG`;
+      }
+      imgElem.addEventListener("load", () => {
+        images.push(imgElem);
+        numberOfLoadedImages++;
+        totalImages++;
+
+        if (numberOfLoadedImages === sceneInfo[num].values.videoImageCount) {
+          //모두 로드 되었으면
+          sceneInfo[num].finishedLoadingImages = true;
+          setImagesOfScene(num);
+          initAfterLoadImages();
+
+          if (!sceneInfo[2].finishedLoadingImages) {
+            loadImagesOfScene(0);
+          }
+          if (!sceneInfo[0].finishedLoadingImages) {
+            loadImagesOfScene(2);
+          }
+        }
+      });
+    }
+  }
+
+  // function loadImagesOfScene2() {
+  //   if (sceneInfo[2].finishedLoadingImages) return;
+
+  //   let numberOfLoadedImages = 0;
+  //   for (let i = 0; i < sceneInfo[2].values.videoImageCount; i++) {
+  //     let imgElem = new Image();
+  //     imgElem.src = `./video/002/IMG_${7027 + i}.JPG`;
+  //     imgElem.addEventListener("load", () => {
+  //       scene0Images.push(imgElem);
+  //       numberOfLoadedImages++;
+  //       totalImages++;
+
+  //       if (numberOfLoadedImages === sceneInfo[2].values.videoImageCount) {
+  //         //모두 로드 되었으면
+  //         sceneInfo[2].finishedLoadingImages = true;
+  //         setImagesOfScene(2);
+  //         initAfterLoadImages();
+
+  //         if (!sceneInfo[0].finishedLoadingImages) {
+  //           loadImagesOfScene0();
+  //         }
+  //       }
+  //     });
+  //   }
+  // }
+
+  function setImagesOfScene(numb) {
+    let images;
+    if (numb === 0) {
+      images = scene0Images;
+    } else {
+      images = scene2Images;
+    }
+    //이미지 순서 정렬
+    sortImages(images);
+    for (let i = 0; i < images.length; i++) {
+      sceneInfo[numb].objs.videoImages.push(images[i]);
+    }
+  }
+
+  // function setCanvasImages() {
+  //   let imgElem;
+  //   for (let i = 0; i < sceneInfo[0].values.videoImageCount; i++) {
+  //     imgElem = new Image();
+  //     imgElem.src = `./video/001/IMG_${6726 + i}.JPG`;
+  //     sceneInfo[0].objs.videoImages.push(imgElem);
+  //   }
+
+  //   let imgElem2;
+  //   for (let i = 0; i < sceneInfo[2].values.videoImageCount; i++) {
+  //     imgElem2 = new Image();
+  //     imgElem2.src = `./video/002/IMG_${7027 + i}.JPG`;
+  //     sceneInfo[2].objs.videoImages.push(imgElem2);
+  //   }
+  // }
 
   function stickyMenu() {
     if (yOffset > 44) {
@@ -530,23 +678,27 @@
     }
   }
 
-  window.addEventListener("load", () => {
-    document.body.classList.remove("before-loading");
+  window.addEventListener("DOMContentLoaded", () => {
+    console.log("DomcontentLoaded");
     setLayout();
-    sceneInfo[0].objs.context.drawImage(sceneInfo[0].objs.videoImages[0], 0, 0);
+    document.body.classList.remove("before-loading");
+    //새로고침 시, 높이 계산 오차 발생 방지를 위하여 재 실행
+    setLayout();
 
-    let tempScrollY = yOffset;
-    let tempScrollCount = 1;
+    // Scene 3 이미지 세팅
+    let imgElem3;
+    for (let i = 0; i < sceneInfo[3].objs.imagesPath.length; i++) {
+      imgElem3 = new Image();
+      imgElem3.src = sceneInfo[3].objs.imagesPath[i];
+      sceneInfo[3].objs.images.push(imgElem3);
+    }
 
-    if (yOffset > 0) {
-      let siId = setInterval(() => {
-        window.scrollTo(0, tempScrollY);
-        tempScrollCount++;
-        tempScrollY++;
-        if (tempScrollCount > 10) {
-          clearInterval(siId);
-        }
-      }, 20);
+    if (currentScene !== 2) {
+      // 첫번째 Scene 이미지 로드
+      loadImagesOfScene(0);
+    } else {
+      // 세번째 Scene 이미지 로드
+      loadImagesOfScene(2);
     }
 
     window.addEventListener("scroll", () => {
@@ -578,5 +730,5 @@
     });
   });
 
-  setCanvasImages();
+  // setCanvasImages();
 })();
