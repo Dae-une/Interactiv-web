@@ -94,7 +94,7 @@
     },
     {
       type: "sticky",
-      heightNum: 5, //브라우저 높이의 5배로 scrollHeight를 세팅
+      heightNum: 4.5, //브라우저 높이의 5배로 scrollHeight를 세팅
       scrollHeight: 0,
       objs: {
         container: document.querySelector("#scroll-section-3"),
@@ -481,9 +481,20 @@
       prevScrollHeight += sceneInfo[i].scrollHeight;
     }
 
+    if (delayedYoffset < prevScrollHeight + sceneInfo[currentScene].scrollHeight) {
+      document.body.classList.remove("scroll-effect-end");
+    }
+
     if (delayedYoffset > prevScrollHeight + sceneInfo[currentScene].scrollHeight) {
       enterNewScene = true;
-      currentScene++;
+
+      if (currentScene === sceneInfo.length - 1) {
+        document.body.classList.add("scroll-effect-end");
+      }
+
+      if (currentScene < sceneInfo.length - 1) {
+        currentScene++;
+      }
       document.body.setAttribute("id", `show-scene-${currentScene}`);
     }
     if (delayedYoffset < prevScrollHeight) {
@@ -519,33 +530,53 @@
     }
   }
 
-  window.addEventListener("resize", () => {
-    if (window.innerWidth > 900) {
-      setLayout();
-    }
-
-    sceneInfo[3].values.rectStartY = 0;
-  });
-  //모바일 기기 가로,세로 변경 이벤트
-  window.addEventListener("orientationchange", setLayout);
-
   window.addEventListener("load", () => {
     document.body.classList.remove("before-loading");
     setLayout();
     sceneInfo[0].objs.context.drawImage(sceneInfo[0].objs.videoImages[0], 0, 0);
+
+    let tempScrollY = yOffset;
+    let tempScrollCount = 1;
+
+    if (yOffset > 0) {
+      let siId = setInterval(() => {
+        window.scrollTo(0, tempScrollY);
+        tempScrollCount++;
+        tempScrollY++;
+        if (tempScrollCount > 10) {
+          clearInterval(siId);
+        }
+      }, 20);
+    }
+
+    window.addEventListener("scroll", () => {
+      yOffset = window.scrollY;
+      scrollLoop();
+      stickyMenu();
+      if (!rafState) {
+        rafId = requestAnimationFrame(loop);
+        rafState = true;
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 900) {
+        window.location.reload();
+      }
+    });
+
+    //모바일 기기 가로,세로 변경 이벤트
+    window.addEventListener("orientationchange", () => {
+      scrollTo(0, 0);
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    });
+
+    document.querySelector(".loading").addEventListener("transitionend", (e) => {
+      document.body.removeChild(e.currentTarget);
+    });
   });
 
-  window.addEventListener("scroll", () => {
-    yOffset = window.scrollY;
-    scrollLoop();
-    stickyMenu();
-    if (!rafState) {
-      rafId = requestAnimationFrame(loop);
-      rafState = true;
-    }
-  });
-  document.querySelector(".loading").addEventListener("transitionend", (e) => {
-    document.body.removeChild(e.currentTarget);
-  });
   setCanvasImages();
 })();
