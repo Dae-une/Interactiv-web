@@ -220,10 +220,10 @@
           setImagesOfScene(num);
           initAfterLoadImages();
 
-          if (!sceneInfo[2].finishedLoadingImages) {
+          if (sceneInfo[2].finishedLoadingImages) {
             loadImagesOfScene(0);
           }
-          if (!sceneInfo[0].finishedLoadingImages) {
+          if (sceneInfo[0].finishedLoadingImages) {
             loadImagesOfScene(2);
           }
         }
